@@ -5,7 +5,7 @@ ros::NodeHandle nh;
 std_msgs::Int32 msg;
 ros::Publisher number_pub("/number_arduino", &msg);
 
-;void number_cb(const std_msgs::Int32& number_msg)
+void number_cb(const std_msgs::Int32& number_msg)
 {
   msg.data = number_msg.data;
   msg.data = msg.data * 2;
