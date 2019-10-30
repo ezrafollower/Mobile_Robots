@@ -22,7 +22,7 @@ GAIN     = 1.0
 K        = 27.0
 LIMIT    = 1.0
 RADIUS   = 0.032
-TRIM     = 0.01
+TRIM     = 0.11
 MAX_PWM  = 255
 
 class DiffController(object):
@@ -92,8 +92,7 @@ class DiffController(object):
         self.sub_cmd.unregister()
         rospy.sleep(0.1)
         self.pub_right.publish(Int16())
-        self.pub_left.publish(Int16())
-        del self.motorhat    
+        self.pub_left.publish(Int16()) 
 
 if __name__ == '__main__':
     rospy.init_node('diff_controller_node')
