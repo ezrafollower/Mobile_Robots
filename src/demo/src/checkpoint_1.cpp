@@ -17,15 +17,13 @@ int main(int argc, char **argv)
 	ros::Subscriber number_subscriber = nh.subscribe("/number_arduino", 10, number_callback);
 	ros::Publisher number_publisher = nh.advertise<std_msgs::Int32>("/number", 10);
 	ros::Rate loop_rate(10);
-	
+
 	ros::Duration(2).sleep();
 	std_msgs::Int32 msg;
 	msg.data = 0;
 	number_publisher.publish(msg);
-	ros::topic::waitForMessage<std_msgs::Int32>("/number_arduino", ros::Duration(5));
+	ros::topic::waitForMessage<std_msgs::Int32>("/number_arduino", ros::Duration(5));	
 
-	
-	
 	int number_count = 0;
 	while(ros::ok() && number_count < 1000)
 	{
@@ -36,7 +34,7 @@ int main(int argc, char **argv)
 		loop_rate.sleep();
 		if(msg.data != 0)
 		{
-			printf("user's input is %d\n", msg.data);
+			printf("user's imput is %d\n", msg.data);
 		}
 	}
 	return 0;

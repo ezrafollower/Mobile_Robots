@@ -1,5 +1,4 @@
 #include <ros.h>
-
 #include <std_msgs/Int16.h>
 
 /* 
@@ -15,6 +14,7 @@
 #define IN1 4
 #define IN2 5
 #define ENA 10
+
 // Right wheel
 #define IN3 6
 #define IN4 7
