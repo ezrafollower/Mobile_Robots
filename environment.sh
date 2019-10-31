@@ -1,2 +1,2 @@
-source /opt/ros/kinetic/setup.bash
-source $HOME/catkin_ws/devel/setup.bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
+source $HOME/Mobile_Robots/devel/setup.bash
