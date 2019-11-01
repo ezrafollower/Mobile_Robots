@@ -7,7 +7,6 @@ def main():
 
     pub_r = rospy.Publisher("right_pwm", Int16, queue_size = 10)
     pub_l = rospy.Publisher("left_pwm",  Int16, queue_size = 10)
-    trim = -11
 
     while not rospy.is_shutdown():
         try:
@@ -23,6 +22,7 @@ def main():
         
         # Go forward input_r=input_l=111
         if (pwm_r == pwm_l):
+            trim = -11
             pwml_raw = pwm_l
             pwmr_raw = pwm_r
             if(pwm_r != 0 ):
@@ -36,6 +36,7 @@ def main():
 	
         # Other motion
 	else:
+            trim = -5
             pwml_raw = pwm_l
             pwmr_raw = pwm_r
             if(pwm_r != 0 ):
