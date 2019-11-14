@@ -1,0 +1,4 @@
+light_threshold    : 200
+max_cnt_right      : 4
+max_cnt_left       : 4  
+max_cnt_straight   : 5
