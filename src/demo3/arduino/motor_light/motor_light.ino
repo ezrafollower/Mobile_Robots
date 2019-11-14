@@ -45,6 +45,7 @@ std_msgs::Int16 light_msg;
 ros::Publisher pub_light_val("/arg3/light_value", &light_msg);
 
 unsigned long t_stamp;
+const int INTERVEL_LIGHT_MS = 500;
 
 void setup()
 {
@@ -104,7 +105,8 @@ void loop()
     analogWrite(ENB, abs(pwm_r));
   }
 
-  if(t_stamp - millis() > 200){
+  
+  if((millis() -t_stamp) > INTERVEL_LIGHT_MS){
     light_msg.data = analogRead(PIN_LIGHT);
     pub_light_val.publish(&light_msg);
     t_stamp = millis();
@@ -112,3 +114,4 @@ void loop()
   
   nh.spinOnce();
 }
+
