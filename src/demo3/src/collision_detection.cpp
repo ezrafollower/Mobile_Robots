@@ -18,29 +18,18 @@ mobilerobot_msgs::Collision msg;
 
 void touch_right_cb(void) {
     if(ros::Time::now() - last_r_time > ros::Duration(0.3) && digitalRead(PIN_TOUCH_RIGHT) == 1){
-        // cout << "right" << endl;
-        // if(msg.left){
-        //     msg.left = false;
-        //     msg.center = true;
-        // }else msg.right = true;
         msg.right = true;
         last_r_time = ros::Time::now();
     }        
 }
 void touch_left_cb(void) {
     if(ros::Time::now() - last_l_time > ros::Duration(0.3) && digitalRead(PIN_TOUCH_LEFT) == 1){
-        // cout << "left" << endl;
-        // if(msg.right){
-        //     msg.right = false;
-        //     msg.center = true;
-        // }else msg.left = true;
         msg.left = true;
         last_l_time = ros::Time::now();
     } 
 }
 void touch_bottom_cb(void) {
     if(ros::Time::now() - last_b_time > ros::Duration(0.3) && digitalRead(PIN_TOUCH_BOTTOM) == 1){
-        // cout << "bottom" << endl;
         msg.bottom = true;
         last_b_time = ros::Time::now();
     } 
@@ -81,14 +70,11 @@ int main (int argc, char **argv){
     while(ros::ok()) {
         if(digitalRead(PIN_TOUCH_BOTTOM) == 0)
             msg.bottom = false;
-        // if(digitalRead(PIN_TOUCH_LEFT) == 0 || digitalRead(PIN_TOUCH_RIGHT) == 0)
-        //     msg.center = false;
         if(digitalRead(PIN_TOUCH_RIGHT) == 0)
             msg.right = false;
         if(digitalRead(PIN_TOUCH_LEFT) == 0)
             msg.left = false;
 
-        
         msg.header.stamp = ros::Time::now();
         pub_collision.publish(msg);
         ros::spinOnce();
