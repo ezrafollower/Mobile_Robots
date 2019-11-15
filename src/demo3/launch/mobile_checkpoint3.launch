@@ -11,7 +11,7 @@
         <node name="collision_detection_node" pkg="demo3" type="collision_detection_node" required="true" />
         
         <!-- FSM node -->
-        <node name="fsm_node" pkg="demo3" type="fsm_node_v1.py" required="true" output="screen">
+        <node name="fsm_node" pkg="demo3" type="fsm_node.py" required="true" output="screen">
             <rosparam command="load" file="$(find demo3)/config/demo3.yaml" />
         </node> 
     </group>

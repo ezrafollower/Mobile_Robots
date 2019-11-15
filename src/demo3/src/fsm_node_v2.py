@@ -145,7 +145,7 @@ class FSM(object):
                 if self.cnt_motion_straight == self.max_cnt_straight:
                     self.cnt_motion_straight = 0
                     self.next_state = STATE_SCAN if not self.flag_collision else self.next_state
-                self.next_state = STATE_SPIN_RIGHT
+                # self.next_state = STATE_SPIN_RIGHT
 
             # scan
             elif self.cur_state == STATE_SCAN:
@@ -157,8 +157,8 @@ class FSM(object):
                     pwm_l, pwm_r = motions['spin_right']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
-                    rospy.sleep(0.2)
-                elif self.cnt_motion_scan >=2 && self.cnt_motion_scan <= 5:
+                    rospy.sleep(0.4)
+                elif self.cnt_motion_scan >=2 and self.cnt_motion_scan <= 5:
                     pwm_l, pwm_r = motions['spin_left']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
@@ -183,7 +183,7 @@ class FSM(object):
                         rospy.sleep(1)
 
                     self.light_list = []
-                    self.cnt_motion_right = 0
+                    self.cnt_motion_scan = 0
                     self.next_state = STATE_STRAIGHT if not self.flag_collision else self.next_state
 
 

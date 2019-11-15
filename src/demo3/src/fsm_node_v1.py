@@ -27,14 +27,14 @@ STATE_TURN_RIGHT = 9
 STATE_SCAN60 = 10
 
 
-motions = {'spin_left': (0, 100),
+motions = {'spin_left': (0, 120),
             'spin_right': (100, 0),
-            'straight': (120, 120),
+            'straight': (120+20, 120+20),
             'back': (-100, -100),
             'right_back': (-120, -100),
             'left_back': (-100, -120),
-            'turn_left': (80, 140),
-            'turn_right': (140, 80),
+            'turn_left': (80, 140+20),
+            'turn_right': (140+20, 80),
             'stop': (0, 0)}
 
 
@@ -157,11 +157,12 @@ class FSM(object):
             elif self.cur_state == STATE_SPIN_RIGHT:
                 rospy.sleep(0.2)
                 print 'STATE_SPIN_RIGHT', self.cnt_motion_left, self.cnt_motion_straight, self.cnt_motion_right
+                self.light_list.append(self.light_data)
                 pwm_l, pwm_r = motions['spin_right']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
 
-                self.light_list.append(self.light_data)
+                
                 self.cnt_motion_right += 1
                 if self.cnt_motion_right == self.max_cnt_right:
                     print self.light_list
@@ -189,11 +190,12 @@ class FSM(object):
             elif self.cur_state == STATE_SPIN_LEFT:
                 rospy.sleep(0.2)
                 print 'STATE_SPIN_LEFT'
+                self.light_list.append(self.light_data)
                 pwm_l, pwm_r = motions['spin_left']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
 
-                self.light_list.append(self.light_data)
+                
                 self.cnt_motion_left += 1
                 if self.cnt_motion_left == self.max_cnt_left:
                     print self.light_list
@@ -255,7 +257,7 @@ class FSM(object):
                 pwm_l, pwm_r = motions['right_back']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
-                self.next_state = STATE_TURN_LEFT if not self.flag_collision else self.next_state
+                self.next_state = STATE_TURN_RIGHT if not self.flag_collision else self.next_state
             # stop
             elif self.cur_state == STATE_STOP:
                 print 'STATE_STOP'
