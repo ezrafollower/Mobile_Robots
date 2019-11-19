@@ -11,11 +11,11 @@
   IN3 LOW,  IN4 HIGH > backward
 */ 
 
-// Left wheel
+// Right wheel
 #define IN1 4
 #define IN2 5
 #define ENA 10
-// Right wheel
+// Left wheel
 #define IN3 6
 #define IN4 7
 #define ENB 11
@@ -68,7 +68,7 @@ void setup()
 
 void loop()
 {
-  // Forward
+  /*// Forward
   if(pwm_r >= 0 and pwm_l >= 0){
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);
@@ -103,10 +103,27 @@ void loop()
     digitalWrite(IN4, HIGH);
     analogWrite(ENA, abs(pwm_l));
     analogWrite(ENB, abs(pwm_r));
-  }
+  }*/
 
+  if(pwm_r >= 0){
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+  }else{
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+  }
   
-  if((millis() -t_stamp) > INTERVEL_LIGHT_MS){
+  if(pwm_l >= 0){
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+  }else{
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
+  }
+  analogWrite(ENA, abs(pwm_r));
+  analogWrite(ENB, abs(pwm_l));
+  
+  if((millis() - t_stamp) > INTERVEL_LIGHT_MS){
     light_msg.data = analogRead(PIN_LIGHT);
     pub_light_val.publish(&light_msg);
     t_stamp = millis();
@@ -114,4 +131,3 @@ void loop()
   
   nh.spinOnce();
 }
-

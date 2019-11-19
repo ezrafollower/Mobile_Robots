@@ -23,7 +23,7 @@ K        = 27.0
 LIMIT    = 1.0
 RADIUS   = 0.032
 TRIM     = 0.11
-MAX_PWM  = 150
+MAX_PWM  = 200
 
 class DiffController(object):
     def __init__(self):
