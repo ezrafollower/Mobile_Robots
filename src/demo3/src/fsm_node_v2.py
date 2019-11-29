@@ -25,9 +25,10 @@ STATE_LEFT_BACK = 7
 STATE_TURN_LEFT = 8
 STATE_TURN_RIGHT = 9
 
+FSM_TRANS_INTERVAL = 0.5
 
-motions = {'spin_left': (0, 120),
-            'spin_right': (100, 0),
+motions = {'spin_left': (-80, 80),
+            'spin_right': (80, -80),
             'straight': (120+20, 120+20),
             'back': (-100, -100),
             'right_back': (-120, -100),
@@ -56,9 +57,10 @@ class FSM(object):
         self.pub_r          = rospy.Publisher("right_pwm", Int16, queue_size = 10)
         self.pub_l          = rospy.Publisher("left_pwm",  Int16, queue_size = 10)
         self.start_srv      = rospy.Service("/start", Trigger, self.start_cb)
-        self.stop_srv       = rospy.Service("/stop", Trigger, self.stop_cb)
+        self.flag_stop_srv       = rospy.Service("/stop", Trigger, self.stop_cb)
 
         self.flag_collision      = False
+        self.flag_stop           = False
         self.cnt_motion_right    = 0
         self.cnt_motion_left     = 0
         self.cnt_motion_straight = 0
@@ -114,6 +116,7 @@ class FSM(object):
         
 
     def start_cb(self, req):
+        self.flag_stop = False
         self.next_state = STATE_STRAIGHT
         if self.cur_state != self.next_state and self.cur_state != STATE_ERROR:
             return TriggerResponse(success=True, message="Request accepted.")
@@ -124,6 +127,7 @@ class FSM(object):
 
     def stop_cb(self, req):
         self.reset_var()
+        self.flag_stop = True
         self.next_state = STATE_STOP
 
 
@@ -144,9 +148,8 @@ class FSM(object):
                 self.cnt_motion_straight += 1
                 if self.cnt_motion_straight == self.max_cnt_straight:
                     self.cnt_motion_straight = 0
-                    self.next_state = STATE_SCAN if not self.flag_collision else self.next_state
-                # self.next_state = STATE_SPIN_RIGHT
-
+                    self.next_state = STATE_SCAN if (not self.flag_collision and not self.flag_stop) else self.next_state
+                
             # scan
             elif self.cur_state == STATE_SCAN:
                 rospy.sleep(0.2)
@@ -157,8 +160,8 @@ class FSM(object):
                     pwm_l, pwm_r = motions['spin_right']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
-                    rospy.sleep(0.4)
-                elif self.cnt_motion_scan >=2 and self.cnt_motion_scan <= 5:
+                    rospy.sleep(0.2)
+                elif self.cnt_motion_scan > 1 and self.cnt_motion_scan <= 5:
                     pwm_l, pwm_r = motions['spin_left']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
@@ -173,7 +176,7 @@ class FSM(object):
                     pwm_l, pwm_r = motions['spin_right']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
-                    rospy.sleep(0.1*(5-idx))
+                    rospy.sleep(0.1*(self.cnt_motion_scan-idx-1))
 
                     # gogogo
                     if mininum <= self.gogo_threshold:
@@ -184,7 +187,7 @@ class FSM(object):
 
                     self.light_list = []
                     self.cnt_motion_scan = 0
-                    self.next_state = STATE_STRAIGHT if not self.flag_collision else self.next_state
+                    self.next_state = STATE_STRAIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
 
             # spin
@@ -218,7 +221,7 @@ class FSM(object):
 
                     self.light_list = []
                     self.cnt_motion_right = 0
-                    self.next_state = STATE_STRAIGHT if not self.flag_collision else self.next_state
+                    self.next_state = STATE_STRAIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
             elif self.cur_state == STATE_SPIN_LEFT:
                 rospy.sleep(0.2)
@@ -251,7 +254,7 @@ class FSM(object):
 
                     self.light_list = []
                     self.cnt_motion_left = 0
-                    self.next_state = STATE_STRAIGHT if not self.flag_collision else self.next_state
+                    self.next_state = STATE_STRAIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
             # turn
             elif self.cur_state == STATE_TURN_RIGHT:
@@ -260,14 +263,14 @@ class FSM(object):
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
                 rospy.sleep(0.5)
-                self.next_state = STATE_SPIN_RIGHT if not self.flag_collision else self.next_state
+                self.next_state = STATE_SPIN_RIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
             elif self.cur_state == STATE_TURN_LEFT:
                 print 'STATE_TURN_LEFT'
                 pwm_l, pwm_r = motions['turn_left']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
                 rospy.sleep(0.5)
-                self.next_state = STATE_STRAIGHT if not self.flag_collision else self.next_state
+                self.next_state = STATE_STRAIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
             # back
             elif self.cur_state == STATE_BACK:
@@ -275,21 +278,21 @@ class FSM(object):
                 pwm_l, pwm_r = motions['back']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
-                self.next_state = STATE_TURN_RIGHT if not self.flag_collision else self.next_state
+                self.next_state = STATE_TURN_RIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
             elif self.cur_state == STATE_LEFT_BACK:
                 print 'STATE_LEFT_BACK'
                 pwm_l, pwm_r = motions['left_back']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
-                self.next_state = STATE_TURN_RIGHT if not self.flag_collision else self.next_state
+                self.next_state = STATE_TURN_RIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
 
             elif self.cur_state == STATE_RIGHT_BACK:
                 print 'STATE_RIGHT_BACK'
                 pwm_l, pwm_r = motions['right_back']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
-                self.next_state = STATE_TURN_LEFT if not self.flag_collision else self.next_state
+                self.next_state = STATE_TURN_LEFT if (not self.flag_collision and not self.flag_stop) else self.next_state
             # stop
             elif self.cur_state == STATE_STOP:
                 print 'STATE_STOP'
@@ -308,10 +311,12 @@ if __name__ == '__main__':
     node = FSM()
     rospy.on_shutdown(node.shutdown_cb)
 
-    r = rospy.Rate(2)
+    # r = rospy.Rate(2)
     while not rospy.is_shutdown():
         node.pub_l.publish(Int16())
         node.pub_r.publish(Int16())
+        rospy.sleep(0.02)
         node.process()
-        r.sleep()
+        rospy.sleep(FSM_TRANS_INTERVAL-0.02)
+        # r.sleep()
     rospy.spin()
