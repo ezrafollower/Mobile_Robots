@@ -9,22 +9,21 @@ using namespace std;
 const short int PIN_IR_RECEIVER = 7;
 
 
-ros::Time last_r_time;
-ros::Time last_l_time;
-ros::Time last_b_time;
+ros::Time last_ir_time;
 
 mobilerobot_msgs::Collision msg;
 
 void ir_cb(void) {
-    ros::Time diff_time = ros::Time::now() - last_r_time;
-    if(diff_time > ros::Duration(0.001)){
+    // ros::Duration diff_time = ros::Time::now() - last_ir_time;
+    if(ros::Time::now() - last_ir_time > ros::Duration(0.001)){
         // msg.right = true;
-        last_r_time = ros::Time::now();
-        if(diff_time < ros::Duration(0.0015))
-            cout << "beacon-1" << endl;
-        else if(diff_time < ros::Duration(0.003))
-            cout << "beacon-2" << endl;
-    }        
+        ros::Duration diff_time = ros::Time::now() - last_ir_time;
+        if(diff_time > ros::Duration(0.0007) && diff_time < ros::Duration(0.002))
+            cout << diff_time << "beacon-1 600" << endl;
+        else if(diff_time > ros::Duration(0.002) && diff_time < ros::Duration(0.004))
+            cout << diff_time << "beacon-2 1500" << endl;
+    }
+    last_ir_time = ros::Time::now();     
 }
 
 int main (int argc, char **argv){
