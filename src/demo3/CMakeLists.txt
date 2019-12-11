@@ -157,8 +157,8 @@ add_executable(light_detect_node src/example_light_detect.cpp)
 target_link_libraries(light_detect_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
 add_executable(collision_detection_node src/collision_detection.cpp)
 target_link_libraries(collision_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
-add_executable(ir_detection_node src/ir_detection.cpp)
-target_link_libraries(ir_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
+add_executable(beacon_detection_node src/beacon_detection.cpp)
+target_link_libraries(beacon_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
 #############
 ## Install ##
 #############
