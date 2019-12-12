@@ -29,13 +29,14 @@ STATE_SPIN_360 = 10
 FSM_TRANS_INTERVAL = 0.5
 
 motions = {'spin_left': (-80, 80),
-            'spin_right': (80, -80),
-            'straight': (120+20, 120+20),
+            'spin_right': (90, -90),
+            'straight': (120+20, 120+0),
             'back': (-100, -100),
             'right_back': (-120, -100),
             'left_back': (-100, -120),
-            'turn_left': (80, 140+20),
-            'turn_right': (140+20, 80),
+            'turn_left': (80, 140),
+            'turn_right': (140, 80),
+            'forced_spin_right': (100, -100),
             'stop': (0, 0)}
 
 
@@ -64,12 +65,14 @@ class FSM(object):
 
         self.flag_collision      = False
         self.flag_stop           = False
+        # self.flag_getball        = False
         self.gate_data           = False
         self.ungate_data         = False
         self.cnt_motion_right    = 0
         self.cnt_motion_left     = 0
         self.cnt_motion_straight = 0
         self.cnt_motion_scan     = 0
+        self.cnt_motion_gate     = 0
         
         self.light_data          = 0
         self.light_list          = []
@@ -84,6 +87,7 @@ class FSM(object):
         self.cnt_motion_left  = 0
         self.cnt_motion_straight = 0
         self.cnt_motion_scan = 0
+        self.cnt_motion_gate = 0
         
 
     ############################ FSM Transition callback ############################
@@ -93,8 +97,8 @@ class FSM(object):
         if msg.bottom:
             print 'Get light ball by touch sensor!'
             self.next_state = STATE_SPIN_360
-            self.flag_collision = True
-            self.reset_var()
+            # self.flag_collision = True
+            # self.reset_var()
         else:
             if msg.left and msg.right:
                 self.next_state = STATE_BACK
@@ -114,11 +118,11 @@ class FSM(object):
         if self.cur_state == STATE_STOP: return
 
         if (self.gate_num == 1):
-             print 'Gate Beacon600'
+             # print 'Gate Beacon600'
              self.gate_data = msg.beacon600
              self.ungate_data = msg.beacon1500
         elif (self.gate_num == 2):
-             print 'Gate Beacon1500'
+             # print 'Gate Beacon1500'
              self.gate_data = msg.beacon1500
              self.ungate_data = msg.beacon600
 
@@ -164,7 +168,7 @@ class FSM(object):
                 self.cnt_motion_straight += 1
                 if self.cnt_motion_straight == self.max_cnt_straight:
                     self.cnt_motion_straight = 0
-                    self.next_state = STATE_SCAN if (not self.flag_collision and not self.flag_stop) else self.next_state
+                    self.next_state = STATE_SPIN_RIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
                 
             # scan
             elif self.cur_state == STATE_SCAN:
@@ -210,17 +214,28 @@ class FSM(object):
             elif self.cur_state == STATE_SPIN_RIGHT:
                 rospy.sleep(0.2)
                 print 'STATE_SPIN_RIGHT'
+                self.light_list.append(self.light_data)
+
+                # if the light value is smaller than gogo_threshold
+                if self.light_list[-1] <= self.gogo_threshold:
+                    print 'gogogo'
+                    pwm_l, pwm_r = motions['straight']
+                    self.pub_l.publish(pwm_l)
+                    self.pub_r.publish(pwm_r)
+                    rospy.sleep(1)
+                    return
+
+                 
                 pwm_l, pwm_r = motions['spin_right']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
 
-                self.light_list.append(self.light_data)
                 self.cnt_motion_right += 1
                 if self.cnt_motion_right == self.max_cnt_right:
+                    print self.light_list
                     idx = np.argmin(self.light_list)
                     mininum = self.light_list[idx]
-                    # print self.light_list
-                    # print idx, 'has minimum'
+                    print idx, 'has minimum'
 
                     # turn reverse direction
                     pwm_l, pwm_r = motions['spin_left']
@@ -276,15 +291,31 @@ class FSM(object):
             # spin 360
             elif self.cur_state == STATE_SPIN_360:
                 rospy.sleep(0.2)
-                print 'STATE_SPIN_360'
+                print 'STATE_SPIN_360, find goal {}'.format(self.gate_num)
 
-                if gate_data and not ungate_data:
+                self.cnt_motion_gate += 1
+                if self.ungate_data:
+                    pwm_l, pwm_r = motions['forced_spin_right']
+                    self.pub_l.publish(pwm_l)
+                    self.pub_r.publish(pwm_r)
+                    rospy.sleep(0.5)
+
+                elif self.cnt_motion_gate > 12: # about 2 round circle
+                    self.cnt_motion_gate = 0
                     pwm_l, pwm_r = motions['straight']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
+                    rospy.sleep(0.2)
+
+                elif self.gate_data and not self.ungate_data:
+                    pwm_l, pwm_r = motions['straight']
+                    self.pub_l.publish(pwm_l)
+                    self.pub_r.publish(pwm_r)
+                    print 'moving forward to goal!!!'
+                    self.cnt_motion_gate = 0
                     rospy.sleep(1)
                 else:
-                    pwm_l, pwm_r = motions['spin_right']
+                    pwm_l, pwm_r = motions['forced_spin_right']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
                  
