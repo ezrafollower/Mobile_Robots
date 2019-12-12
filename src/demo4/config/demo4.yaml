@@ -1,5 +1,0 @@
-light_threshold    : 180
-max_cnt_right      : 3
-max_cnt_left       : 3  
-max_cnt_straight   : 1
-gogo_threshold     : 600

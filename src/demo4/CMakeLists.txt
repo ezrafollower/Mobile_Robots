@@ -10,9 +10,6 @@ project(demo4)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
-  std_msgs
-  std_srvs
-  mobilerobot_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -72,7 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -106,8 +103,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES demo3
-#  CATKIN_DEPENDS roscpp rospy std_msgs std_srvs
+#  LIBRARIES demo4
+#  CATKIN_DEPENDS roscpp rospy
 #  DEPENDS system_lib
 )
 
@@ -124,7 +121,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/demo3.cpp
+#   src/${PROJECT_NAME}/demo4.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -135,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/demo3_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/demo4_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,14 +148,7 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-FIND_LIBRARY(WIRINGPI_LIBRARY wiringPi /usr/local/include)
 
-add_executable(light_detect_node src/example_light_detect.cpp)
-target_link_libraries(light_detect_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
-add_executable(collision_detection_node src/collision_detection.cpp)
-target_link_libraries(collision_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
-add_executable(beacon_detection_node src/beacon_detection.cpp)
-target_link_libraries(beacon_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRARY})
 #############
 ## Install ##
 #############
@@ -206,7 +196,7 @@ target_link_libraries(beacon_detection_node ${catkin_LIBRARIES} ${WIRINGPI_LIBRA
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_demo3.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_demo4.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

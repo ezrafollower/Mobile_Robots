@@ -61,11 +61,11 @@ int main (int argc, char **argv){
             msg.beacon600 = true;
         }
         else if(cnt_beacon1500 - cnt_beacon600 >= 10){
-            msg.cnt_beacon1500 = true;
+            msg.beacon1500 = true;
         }
         else{
-            msg.cnt_beacon600 = false;
-            msg.cnt_beacon1500 = false;
+            msg.beacon600 = false;
+            msg.beacon1500 = false;
         }
 
         msg.header.stamp = ros::Time::now();
