@@ -30,13 +30,13 @@ FSM_TRANS_INTERVAL = 0.5
 
 motions = {'spin_left': (-80, 80),
             'spin_right': (90, -90),
-            'straight': (120+20, 120+0),
+            'straight': (120+40, 120+15),
             'back': (-100, -100),
             'right_back': (-120, -100),
             'left_back': (-100, -120),
             'turn_left': (80, 140),
             'turn_right': (140, 80),
-            'forced_spin_right': (100, -100),
+            'forced_spin_right': (105, -105),
             'stop': (0, 0)}
 
 
@@ -165,6 +165,7 @@ class FSM(object):
                 pwm_l, pwm_r = motions['straight']
                 self.pub_l.publish(pwm_l)
                 self.pub_r.publish(pwm_r)
+                rospy.sleep(0.5)
                 self.cnt_motion_straight += 1
                 if self.cnt_motion_straight == self.max_cnt_straight:
                     self.cnt_motion_straight = 0
@@ -241,7 +242,7 @@ class FSM(object):
                     pwm_l, pwm_r = motions['spin_left']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
-                    rospy.sleep(0.22*(self.max_cnt_right - idx))
+                    rospy.sleep(0.2*(self.max_cnt_right - idx))
 
                     # gogogo
                     if mininum <= self.gogo_threshold:
