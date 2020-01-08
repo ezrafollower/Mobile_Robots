@@ -5,3 +5,6 @@ install/
 .catkin_workspace
 rpi_ws/src/CMakeLists.txt
 nano_ws/src/CMakeLists.txt
+
+# Tensorflow
+*.pb
