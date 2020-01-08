@@ -25,12 +25,13 @@ STATE_LEFT_BACK = 7
 STATE_TURN_LEFT = 8
 STATE_TURN_RIGHT = 9
 STATE_SPIN_360 = 10
+STATE_GOGOGO = 11
 
 FSM_TRANS_INTERVAL = 0.5
 
-motions = {'spin_left': (-80, 80),
-            'spin_right': (90, -90),
-            'straight': (120+40, 120+15),
+motions = {'spin_left': (-95, 95),
+            'spin_right': (95, -95),
+            'straight': (120+60, 120+15),
             'back': (-100, -100),
             'right_back': (-120, -100),
             'left_back': (-100, -120),
@@ -53,6 +54,10 @@ class FSM(object):
         self.max_cnt_straight = rospy.get_param('~max_cnt_straight', '5')
         self.gogo_threshold   = rospy.get_param('~gogo_threshold', '180')
         self.gate_num         = rospy.get_param('~gate', '2')
+        if self.gate_num == 1:
+            self.gogo_threshold = 700
+        elif self.gate_num == 2:
+            self.gogo_threshold = 800
 
         # ROS publisher & subscriber & service
         self.sub_collision  = rospy.Subscriber('collision_data', Collision, self.collision_cb)
@@ -137,7 +142,7 @@ class FSM(object):
 
     def start_cb(self, req):
         self.flag_stop = False
-        self.next_state = STATE_STRAIGHT
+        self.next_state = STATE_GOGOGO # STATE_STRAIGHT
         if self.cur_state != self.next_state and self.cur_state != STATE_ERROR:
             return TriggerResponse(success=True, message="Request accepted.")
         else:
@@ -169,13 +174,36 @@ class FSM(object):
                 self.cnt_motion_straight += 1
                 if self.cnt_motion_straight == self.max_cnt_straight:
                     self.cnt_motion_straight = 0
-                    self.next_state = STATE_SPIN_RIGHT if (not self.flag_collision and not self.flag_stop) else self.next_state
-                
+                    self.next_state = STATE_SCAN if (not self.flag_collision and not self.flag_stop) else self.next_state
+            
+            elif self.cur_state == STATE_GOGOGO:
+                print 'STATE_GOGOGO'
+                self.light_list
+                pwm_l, pwm_r = motions['straight']
+                self.pub_l.publish(pwm_l)
+                self.pub_r.publish(pwm_r)
+                rospy.sleep(2.0)
+                self.cnt_motion_straight += 1
+                if self.cnt_motion_straight == self.max_cnt_straight:
+                    self.cnt_motion_straight = 0
+                    self.next_state = STATE_SCAN if (not self.flag_collision and not self.flag_stop) else self.next_state
+
             # scan
             elif self.cur_state == STATE_SCAN:
                 rospy.sleep(0.2)
                 print 'STATE_SCAN'
                 self.light_list.append(self.light_data)
+
+                # if the light value is smaller than gogo_threshold
+                if self.light_list[-1] <= self.gogo_threshold:
+                    print 'gogogo'
+                    pwm_l, pwm_r = motions['straight']
+                    self.pub_l.publish(pwm_l)
+                    self.pub_r.publish(pwm_r)
+                    rospy.sleep(1)
+                    return
+
+
                 self.cnt_motion_scan += 1
                 if self.cnt_motion_scan == 1:
                     pwm_l, pwm_r = motions['spin_right']
@@ -242,7 +270,7 @@ class FSM(object):
                     pwm_l, pwm_r = motions['spin_left']
                     self.pub_l.publish(pwm_l)
                     self.pub_r.publish(pwm_r)
-                    rospy.sleep(0.2*(self.max_cnt_right - idx))
+                    rospy.sleep(0.25*(self.max_cnt_right - idx))
 
                     # gogogo
                     if mininum <= self.gogo_threshold:
