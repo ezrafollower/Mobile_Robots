@@ -22,8 +22,9 @@ GAIN     = 1.0
 K        = 27.0
 LIMIT    = 1.0
 RADIUS   = 0.032
-TRIM     = 0.11
+TRIM     = -0.24
 MAX_PWM  = 200
+MIN_PWM  = 80  # minimum value to launch motor
 
 class DiffController(object):
     def __init__(self):
@@ -69,14 +70,14 @@ class DiffController(object):
         u_l_limited = max(min(u_l, self.limit), -self.limit)
 
         # print "u_r: " + str(u_r_limited) + ", u_l: " + str(u_l_limited)
-        self.motor_motion(u_r_limited * MAX_PWM, u_l_limited * MAX_PWM)
-
+        self.motor_motion(u_r_limited * (MAX_PWM-MIN_PWM) + MIN_PWM*u_r_limited/abs(u_r_limited+1e-07), \
+                              u_l_limited * (MAX_PWM-MIN_PWM) + MIN_PWM*u_l_limited/abs(u_l_limited+1e-07))
 
     # sub_cmd callback, get desired linear and angular velocity
     def cmd_cb(self, msg):
         self.v_d = msg.linear.x
         self.w_d = msg.angular.z
-        rospy.loginfo('velocity: {:.3f}, omega: {:.3f}'.format(self.v_d, self.w_d))
+        #rospy.loginfo('velocity: {:.3f}, omega: {:.3f}'.format(self.v_d, self.w_d))
 
 
     # Send command to motors
@@ -85,6 +86,7 @@ class DiffController(object):
     def motor_motion(self, pwm_r, pwm_l):
         self.pub_right.publish(int(pwm_r))
         self.pub_left.publish(int(pwm_l))
+        print(pwm_l, pwm_r)
     
 
     # Shutdown function, call when terminate
