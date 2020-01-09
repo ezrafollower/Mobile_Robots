@@ -1,18 +1,24 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import numpy as np
 import os.path
 import tensorflow as tf
 import cv2
 import sys
-# sys.path.append("/opt/ros/melodic/lib/python2.7/dist-packages")
+#sys.path.append("/opt/ros/melodic/lib/python2.7/dist-packages")
 import rospy
 from duckiepond.msg import Box, Boxlist
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
 
+# config = tf.ConfigProto()
+# config.gpu_options.allow_growth = True
+# config.gpu_options.per_process_gpu_memory_fraction = 0.2
+#tf.keras.backend.set_session(tf.Session(config=config));
 
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.7)
+sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
 
 class ObjectDetecter(object):
     def __init__(self):
@@ -23,6 +29,8 @@ class ObjectDetecter(object):
         self.NUM_CLASSES = 1
         self.session_config = tf.ConfigProto()
         self.session_config.gpu_options.allow_growth = True
+        #self.session_config.gpu_options.per_process_gpu_memory_fraction = 0.95
+
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -41,12 +49,12 @@ class ObjectDetecter(object):
         self.sim = rospy.get_param("detecter/sim", False)
 
         self.node_name = rospy.get_name()
-        if self.sim:
-            self.subscriber = rospy.Subscriber(
-                "camera/rgb/image_rect_color", Image, self.cbimage_raw, queue_size=1, buff_size=2**24)
-        else:
-            self.subscriber = rospy.Subscriber(
-                "/camera/image_raw", Image, self.cbimage_raw, queue_size=1, buff_size=2**24)
+        # if self.sim:
+        #     self.subscriber = rospy.Subscriber(
+        #         "camera/rgb/image_rect_color", Image, self.cbimage_raw, queue_size=1, buff_size=2**24)
+        # else:
+        #     self.subscriber = rospy.Subscriber(
+        #         "/raspicam_node/image/compressed", CompressedImage, self.cbimage, queue_size=1, buff_size=2**24)
 
         self.pubImg = rospy.Publisher(
             "detecter/image/compressed", CompressedImage, queue_size=1)
@@ -56,6 +64,29 @@ class ObjectDetecter(object):
         rospy.loginfo("[%s] Initializing " % (self.node_name))
         self.bridge = CvBridge()
         self.frame_counter = 0
+
+
+        # for i in range(10):
+        #     tmp_img = np.random.rand(480, 640, 3)
+        #     image_np_expanded = np.expand_dims(tmp_img, axis=0)
+        #     print('d')
+        #     image_tensor = self.detection_graph.get_tensor_by_name(
+        #         'image_tensor:0')
+        #     boxes = self.detection_graph.get_tensor_by_name(
+        #         'detection_boxes:0')
+        #     scores = self.detection_graph.get_tensor_by_name(
+        #         'detection_scores:0')
+        #     classes = self.detection_graph.get_tensor_by_name(
+        #         'detection_classes:0')
+        #     num_detections = self.detection_graph.get_tensor_by_name(
+        #         'num_detections:0')
+        #     print('e')
+        #     (boxes, scores, classes, num_detections) = self.sess.run(
+        #         [boxes, scores, classes, num_detections],
+        #         feed_dict={image_tensor: image_np_expanded})
+        #     print('f')
+        #     rospy.sleep(1)
+        # exit(-1)
 
     def cbimage_raw(self, img):
         self.frame_counter += 1
@@ -70,7 +101,10 @@ class ObjectDetecter(object):
         self.frame_counter += 1
         if self.frame_counter == self.input_rate/self.dest_rate:
             self.frame_counter = 0
+
             image = self.bridge.compressed_imgmsg_to_cv2(img)
+            image = cv2.resize(image, (640, 480))
+            print(image.shape)
             self.process_img(image, img)
 
     def process_img(self, image, msg):
