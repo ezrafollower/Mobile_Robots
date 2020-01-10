@@ -16,18 +16,21 @@ from math import sin, cos, isnan
 from geometry_msgs.msg import Twist, PoseStamped
 from std_msgs.msg import Int16
 from std_srvs.srv import Empty, EmptyResponse
+from sensor_msgs.msg import Joy
 
 WIDTH    = 0.172
 GAIN     = 1.0
 K        = 27.0
 LIMIT    = 1.0
 RADIUS   = 0.032
-TRIM     = -0.24
-MAX_PWM  = 200
+TRIM     = -0.24 #-0.24
+MAX_PWM  = 100 #200
 MIN_PWM  = 80  # minimum value to launch motor
 
 class DiffController(object):
     def __init__(self):
+        self.mode_joystick = True
+
         # Desired velocities
         self.v_d = 0
         self.w_d = 0
@@ -36,6 +39,7 @@ class DiffController(object):
         self.pub_right = rospy.Publisher('right_pwm', Int16, queue_size = 1)
         self.pub_left = rospy.Publisher('left_pwm', Int16, queue_size = 1)
         self.sub_cmd  = rospy.Subscriber('cmd_vel', Twist, self.cmd_cb,  queue_size = 1)
+        self.sub_auto_cmd  = rospy.Subscriber('auto_cmd_vel', Twist, self.auto_cmd_cb,  queue_size = 1)
 
         # ROS Parameters
         self.k = rospy.get_param('~k', K)
@@ -47,6 +51,8 @@ class DiffController(object):
         # ROS Timer
         rospy.Timer(rospy.Duration(1 / 5.0), self.timer_cb) # 5Hz
         rospy.loginfo('[%s] Initialized'  %(rospy.get_name()))
+
+        self.sub_joy_ = rospy.Subscriber("joy", Joy, self.cbJoy, queue_size=1)
 
 
     def timer_cb(self, event):
@@ -75,9 +81,17 @@ class DiffController(object):
 
     # sub_cmd callback, get desired linear and angular velocity
     def cmd_cb(self, msg):
-        self.v_d = msg.linear.x
-        self.w_d = msg.angular.z
-        #rospy.loginfo('velocity: {:.3f}, omega: {:.3f}'.format(self.v_d, self.w_d))
+        if self.mode_joystick:
+            self.v_d = msg.linear.x
+            self.w_d = msg.angular.z
+            rospy.loginfo('joy mode, vel: {:.3f}, omega: {:.3f}'.format(self.v_d, self.w_d))
+    
+    def auto_cmd_cb(self, msg):
+        if not self.mode_joystick:
+            self.v_d = msg.linear.x
+            self.w_d = msg.angular.z
+            rospy.loginfo('auto mode, vel: {:.3f}, omega: {:.3f}'.format(self.v_d, self.w_d))
+        
 
 
     # Send command to motors
@@ -86,8 +100,20 @@ class DiffController(object):
     def motor_motion(self, pwm_r, pwm_l):
         self.pub_right.publish(int(pwm_r))
         self.pub_left.publish(int(pwm_l))
-        print(pwm_l, pwm_r)
-    
+        #print('(pwm_l, pwm_r) = ({:2f}, {:2f})'.format(pwm_l, pwm_r))
+
+    def cbJoy(self, joy_msg):
+        if (joy_msg.buttons[6] == 1): #The back button, joystick control
+            rospy.loginfo('Joystick_control = True')
+            self.mode_joystick = True
+            #self.pub_right.publish(Int16())
+            #self.pub_left.publish(Int16())
+        elif (joy_msg.buttons[7] == 1): #the start button
+            rospy.loginfo('Auto_control = True')
+            self.mode_joystick = False
+            #self.pub_right.publish(Int16())
+            #self.pub_left.publish(Int16())
+
 
     # Shutdown function, call when terminate
     def shutdown(self):
